@@ -378,7 +378,12 @@ static int ixx_act_ib_xxx_rcv_cmd(struct ixx_pci_interface *intf, u32 *rx_fifo,
         if (rx_fifo[CAN_IB2X0_PCR_RES_DIR] != CAN_IB2X0_PCR_RESDIR_DTOH)
                 return -EBADSLT;
 
+        #if LINUX_VERSION_CODE < KERNEL_VERSION(5, 0, 0)
         do_gettimeofday(&start);
+        #else
+        ktime_get_real_ts64((struct timespec64*)&start);
+        #endif
+
         end = start;
 
         while ((end.tv_usec - start.tv_usec) < CAN_IB2X0_CMD_TIMEOUT_US) {
@@ -437,7 +442,11 @@ static int ixx_act_ib_xxx_rcv_cmd(struct ixx_pci_interface *intf, u32 *rx_fifo,
 
                 return dal_res->ret_code;
 
+                #if LINUX_VERSION_CODE < KERNEL_VERSION(5, 0, 0)
                 cmd_continue: do_gettimeofday(&end);
+                #else
+                cmd_continue: ktime_get_real_ts64((struct timespec64*)&end);
+                #endif
         }
 
         return err;

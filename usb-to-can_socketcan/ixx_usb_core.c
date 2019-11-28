@@ -138,7 +138,13 @@ void ixxat_usb_update_ts_now(struct ixx_usb_device *dev, u32 hw_time_base)
 void ixxat_usb_set_ts_now(struct ixx_usb_device *dev, u32 hw_time_base)
 {
         dev->time_ref.ts_dev_0 = hw_time_base;
+        
+        #if LINUX_VERSION_CODE < KERNEL_VERSION(5, 0, 0)
         do_gettimeofday(&dev->time_ref.tv_host_0);
+        #else
+        ktime_get_real_ts64((struct timespec64*)&dev->time_ref.tv_host_0);
+        #endif
+
         dev->time_ref.ts_dev_last = hw_time_base;
 }
 
