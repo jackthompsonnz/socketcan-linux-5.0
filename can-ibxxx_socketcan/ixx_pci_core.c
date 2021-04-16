@@ -235,24 +235,25 @@ void ixxat_dump_mem(char *prompt, void *p, int l)
         DUMP_WIDTH, 1, p, l, false);
 }
 
-static void ixxat_pci_add_us(struct timeval *tv, u64 delta_us)
+static void ixxat_pci_add_us(struct timespec64 *tv, u64 delta_us)
 {
         /* number of s. to add to final time */
         u32 delta_s = div_u64(delta_us, 1000000);
 
         delta_us -= delta_s * 1000000;
 
-        tv->tv_usec += delta_us;
-        if (tv->tv_usec >= 1000000) {
-                tv->tv_usec -= 1000000;
+        tv->tv_nsec += delta_us * 1000;
+        if (tv->tv_nsec >= 1000000000) {
+                tv->tv_nsec -= 1000000000;
                 delta_s++;
         }
+
         tv->tv_sec += delta_s;
 }
 
 void ixxat_pci_get_ts_tv(struct ixx_pci_priv *dev, u32 ts, ktime_t *k_time)
 {
-        struct timeval tv = dev->time_ref.tv_host_0;
+        struct timespec64 tv = dev->time_ref.tv_host_0;
 
         if (ts < dev->time_ref.ts_dev_last) {
                 ixxat_pci_update_ts_now(dev, ts);
@@ -261,7 +262,7 @@ void ixxat_pci_get_ts_tv(struct ixx_pci_priv *dev, u32 ts, ktime_t *k_time)
         dev->time_ref.ts_dev_last = ts;
         ixxat_pci_add_us(&tv, ts - dev->time_ref.ts_dev_0);
 
-        *k_time = timeval_to_ktime(tv);
+        *k_time = timespec64_to_ktime(tv);
 }
 
 void ixxat_pci_update_ts_now(struct ixx_pci_priv *dev, u32 hw_time_base)
@@ -278,12 +279,8 @@ void ixxat_pci_update_ts_now(struct ixx_pci_priv *dev, u32 hw_time_base)
 void ixxat_pci_set_ts_now(struct ixx_pci_priv *dev, u32 hw_time_base)
 {
         dev->time_ref.ts_dev_0 = hw_time_base;
-        
-        #if LINUX_VERSION_CODE < KERNEL_VERSION(5, 0, 0)
-        do_gettimeofday(&dev->time_ref.tv_host_0);
-        #else
+
         ktime_get_real_ts64((struct timespec64*)&dev->time_ref.tv_host_0);
-        #endif
 
         dev->time_ref.ts_dev_last = hw_time_base;
 }

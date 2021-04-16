@@ -193,7 +193,7 @@ struct ixx_usb_adapter {
 };
 
 struct ixx_time_ref {
-        struct timeval tv_host_0;
+        struct timespec64 tv_host_0;
         u32 ts_dev_0;
         u32 ts_dev_last;
 };

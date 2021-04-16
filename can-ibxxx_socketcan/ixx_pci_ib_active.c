@@ -210,7 +210,7 @@ MODULE_SUPPORTED_DEVICE("IXXAT Automation GmbH CAN-IB2x0, CAN-IB4x0, CAN-IB6x0 a
 #define CAN_IB2X0_BMG_WRITE_BLOCK_CMD \
                 CAN_IB2X0_BMG_CMD_CODE(CAN_IB2X0_BMG_CMD_CAT, 4)
 
-#define CAN_IB2X0_CMD_TIMEOUT_US    500000
+#define CAN_IB2X0_CMD_TIMEOUT_NS    500000000
 
 /* request packet header  */
 struct ixx_dal_req {
@@ -369,7 +369,7 @@ static int ixx_act_ib_xxx_rcv_cmd(struct ixx_pci_interface *intf, u32 *rx_fifo,
         u32* res_size;
         struct ixx_dal_req *res_dal_req;
         u32 read_index, write_index, data_offset;
-        struct timeval start, end;
+        struct timespec64 start, end;
         size_t dal_size = sizeof(struct ixx_dal_req);
 
         write_index = rx_fifo[CAN_IB2X0_PCR_RES_WRITE_IDX];
@@ -378,15 +378,11 @@ static int ixx_act_ib_xxx_rcv_cmd(struct ixx_pci_interface *intf, u32 *rx_fifo,
         if (rx_fifo[CAN_IB2X0_PCR_RES_DIR] != CAN_IB2X0_PCR_RESDIR_DTOH)
                 return -EBADSLT;
 
-        #if LINUX_VERSION_CODE < KERNEL_VERSION(5, 0, 0)
-        do_gettimeofday(&start);
-        #else
         ktime_get_real_ts64((struct timespec64*)&start);
-        #endif
 
         end = start;
 
-        while ((end.tv_usec - start.tv_usec) < CAN_IB2X0_CMD_TIMEOUT_US) {
+        while ((end.tv_nsec - start.tv_nsec) < CAN_IB2X0_CMD_TIMEOUT_NS) {
                 if (++read_index == rx_fifo[CAN_IB2X0_PCR_RES_NUM_OBJ])
                         read_index = 0;
 
@@ -442,11 +438,7 @@ static int ixx_act_ib_xxx_rcv_cmd(struct ixx_pci_interface *intf, u32 *rx_fifo,
 
                 return dal_res->ret_code;
 
-                #if LINUX_VERSION_CODE < KERNEL_VERSION(5, 0, 0)
-                cmd_continue: do_gettimeofday(&end);
-                #else
-                cmd_continue: ktime_get_real_ts64((struct timespec64*)&end);
-                #endif
+                cmd_continue: ktime_get_real_ts64(&end);
         }
 
         return err;
@@ -1862,17 +1854,17 @@ static int ixx_act_ib_xxx_probe(struct pci_dev *pdev,
         intf->memlen = pci_resource_len(pdev, 2);
 
         request_mem_region(intf->reg1add, intf->reg1len, "IXXAT PCI Registers");
-        intf->reg1vadd = ioremap_nocache(intf->reg1add, intf->reg1len);
+        intf->reg1vadd = ioremap(intf->reg1add, intf->reg1len);
         if (!intf->reg1vadd) {
-                printk("reg1vadd ioremap_nocache failed\n");
+                printk("reg1vadd ioremap failed\n");
                 err = -ENOBUFS;
                 goto release_reg1;
         }
 
         request_mem_region(intf->memadd, intf->memlen, "IXXAT PCI Memory");
-        intf->memvadd = ioremap_nocache(intf->memadd, intf->memlen);
+        intf->memvadd = ioremap(intf->memadd, intf->memlen);
         if (!intf->memvadd) {
-                printk("memvadd ioremap_nocache failed\n");
+                printk("memvadd ioremap failed\n");
                 err = -ENOBUFS;
                 goto release_memreg;
         }
