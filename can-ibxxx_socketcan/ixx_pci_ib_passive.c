@@ -1221,17 +1221,17 @@ static int ixx_pas_ib_xxx_probe(struct pci_dev *pdev,
         intf->memlen = pci_resource_len(pdev, 2);
 
         request_mem_region(intf->memadd, intf->memlen, "IXXAT PCI Memory");
-        intf->memvadd = ioremap_nocache(intf->memadd, intf->memlen);
+        intf->memvadd = ioremap(intf->memadd, intf->memlen);
         if (!intf->memvadd) {
-                printk("memvadd ioremap_nocache failed\n");
+                printk("memvadd ioremap failed\n");
                 err = -ENOBUFS;
                 goto release_memreg;
         }
 
         request_mem_region(intf->reg1add, intf->reg1len, "IXXAT PCI Registers");
-        intf->reg1vadd = ioremap_nocache(intf->reg1add, intf->reg1len);
+        intf->reg1vadd = ioremap(intf->reg1add, intf->reg1len);
         if (!intf->reg1vadd) {
-                printk("reg1vadd ioremap_nocache failed\n");
+                printk("reg1vadd ioremap failed\n");
                 err = -ENOBUFS;
                 goto release_reg1;
         }
