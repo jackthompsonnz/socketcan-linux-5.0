@@ -209,7 +209,7 @@ static int ixx_pas_ib_fd_xxx_handle_srr_canmsg(struct ixx_pci_priv *priv)
                         ioread32(priv->ifi_base + IFIFDREG_RX_FIFO_DLC));
 
         priv->netdev->stats.tx_packets += 1;
-        priv->netdev->stats.tx_bytes += can_dlc2len(
+        priv->netdev->stats.tx_bytes += can_fd_dlc2len(
                         ifi_reg_dlc & IFIFD_RXFIFO_DLC);
         frn = (ifi_reg_dlc & IFIFD_RXFIFO_FRN) >> IFIFD_RXFIFO_FRN_S;
 
@@ -237,7 +237,7 @@ static int ixx_pas_ib_fd_xxx_handle_canmsg(struct ixx_pci_priv *priv)
         raw_id = le32_to_cpu(ioread32(priv->ifi_base + IFIFDREG_RX_FIFO_ID));
         raw_dlc = le32_to_cpu(ioread32(priv->ifi_base + IFIFDREG_RX_FIFO_DLC));
 
-        can_frame->len = can_dlc2len(
+        can_frame->len = can_fd_dlc2len(
                         le32_to_cpu(
                                         (raw_dlc & IFIFD_RXFIFO_DLC)
                                                         >> IFIFD_RXFIFO_DLC_S));
@@ -500,7 +500,7 @@ static int ixx_pas_ib_fd_xxx_start_xmit(struct sk_buff *skb,
         if (cf->can_id & CAN_RTR_FLAG)
                 can_dlc |= IFIFD_TXFIFO_RTR;
 
-        can_dlc |= can_len2dlc(cf->len) & IFIFD_TXFIFO_DLC;
+        can_dlc |= can_fd_len2dlc(cf->len) & IFIFD_TXFIFO_DLC;
 
         if (skb->len == CANFD_MTU) {
                 can_dlc |= IFIFD_TXFIFO_EDL;

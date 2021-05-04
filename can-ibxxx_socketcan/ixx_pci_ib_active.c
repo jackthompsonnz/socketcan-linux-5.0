@@ -32,7 +32,6 @@
 #include <linux/firmware.h>
 #include <linux/time.h>
 
-#include <asm-generic/kmap_types.h>
 #include <asm-generic/errno.h>
 
 #include <stdarg.h>
@@ -875,7 +874,7 @@ static int ixx_act_ib_xxx_handle_srr_canfdmsg(struct ixx_pci_priv *priv,
         ifi_reg_dlc = le32_to_cpu(ifi_base[IXX_IFI_DLC]);
 
         priv->netdev->stats.tx_packets += 1;
-        priv->netdev->stats.tx_bytes += can_dlc2len(
+        priv->netdev->stats.tx_bytes += can_fd_dlc2len(
                         ifi_reg_dlc & IFIFD_RXFIFO_DLC);
         frn = (ifi_reg_dlc & IFIFD_RXFIFO_FRN) >> IFIFD_RXFIFO_FRN_S;
 
@@ -952,7 +951,7 @@ static int ixx_act_ib_xxx_handle_canfdmsg(struct ixx_pci_priv *priv,
         raw_dlc = le32_to_cpu(ifi_base[IXX_IFI_DLC]);
         raw_id = le32_to_cpu(ifi_base[IXX_IFI_ID]);
 
-        can_frame->len = can_dlc2len(
+        can_frame->len = can_fd_dlc2len(
                         (raw_dlc & IFIFD_RXFIFO_DLC) >> IFIFD_RXFIFO_DLC_S);
 
         if (raw_id & IFIFD_RXFIFO_IDE) {
@@ -1569,7 +1568,7 @@ static int ixx_act_ib_xxx_start_xmit_fd(struct sk_buff *skb,
         if (cf->can_id & CAN_RTR_FLAG)
                 can_dlc |= IFIFD_TXFIFO_RTR;
         else {
-                can_dlc |= can_len2dlc(cf->len) & IFIFD_TXFIFO_DLC;
+                can_dlc |= can_fd_len2dlc(cf->len) & IFIFD_TXFIFO_DLC;
                 if (cf->len > 8) {
                         can_dlc |= IFIFD_TXFIFO_EDL;
                 }
