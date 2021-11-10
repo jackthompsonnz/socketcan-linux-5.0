@@ -614,7 +614,6 @@ static int ixx_usbfd_handle_canmsg(struct ixx_usb_device *dev,
 	if (!skb)
 		return -ENOMEM;
 
-
 	if (flags & IXXAT_USBFD_MSG_FLAGS_EDL) {
 		if (flags & IXXAT_USBFD_MSG_FLAGS_FDR)
 			can_frame->flags |= CANFD_BRS;
