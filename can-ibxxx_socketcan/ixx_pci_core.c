@@ -301,7 +301,7 @@ int ixxat_pci_handle_frn(struct ixx_pci_priv *dev, u8 frn, u32 timestamp)
 
         if (expectedfrn == dev->frn_write) {
                 netdev_dbg(dev->netdev, "expectedfrn == dev->frn_write");
-//                can_free_echo_skb(dev->netdev, frn - 1);
+//                can_free_echo_skb(dev->netdev, frn - 1, 0);
         } else if (expectedfrn < dev->frn_write) {
                 netdev_dbg(dev->netdev, "expectedfrn < dev->frn_write");
                 if (frn == expectedfrn) {
@@ -311,21 +311,21 @@ int ixxat_pci_handle_frn(struct ixx_pci_priv *dev, u8 frn, u32 timestamp)
                         if (skb)
                                 ixxat_pci_get_ts_tv(dev, timestamp,
                                                 &skb->tstamp);
-                        can_get_echo_skb(dev->netdev, frn - 1);
+                        can_get_echo_skb(dev->netdev, frn - 1, NULL);
                         dev->frn_read++;
                         result = 1;
                         netdev_dbg(dev->netdev, "can_get_echo_skb %d", frn - 1);
                 } else if (frn < expectedfrn) {
                         netdev_dbg(dev->netdev, "frn < expectedfrn");
                         while (expectedfrn != frn) {
-//                                can_free_echo_skb(dev->netdev, frn - 1);
+//                                can_free_echo_skb(dev->netdev, frn - 1, 0);
                                 frn++;
                         }
                 } else if (frn > expectedfrn) {
                         netdev_dbg(dev->netdev, "frn > expectedfrn");
                         // durch überläufe sind viele nachrichten verloren gegangen
                         while (expectedfrn != frn) {
-//                                can_free_echo_skb(dev->netdev, expectedfrn - 1);
+//                                can_free_echo_skb(dev->netdev, expectedfrn - 1, 0);
                                 expectedfrn++;
                         }
                         // frn ist jetzt richtig behandle nachricht
@@ -333,14 +333,14 @@ int ixxat_pci_handle_frn(struct ixx_pci_priv *dev, u8 frn, u32 timestamp)
                         if (skb)
                                 ixxat_pci_get_ts_tv(dev, timestamp,
                                                 &skb->tstamp);
-                        can_get_echo_skb(dev->netdev, frn - 1);
+                        can_get_echo_skb(dev->netdev, frn - 1, NULL);
                         dev->frn_read = expectedfrn;
                         result = 1;
                 } else if (frn > expectedfrn && frn >= dev->frn_write) {
                         netdev_dbg(dev->netdev,
                                         "frn > expectedfrn && frn >= dev->frn_write");
                         while (expectedfrn != frn) {
-//                                can_free_echo_skb(dev->netdev, frn - 1);
+//                                can_free_echo_skb(dev->netdev, frn - 1, 0);
                                 frn++;
                                 if (frn > IXX_PCI_MAX_TX_TRANS)
                                         frn = 1;
@@ -355,14 +355,14 @@ int ixxat_pci_handle_frn(struct ixx_pci_priv *dev, u8 frn, u32 timestamp)
                         if (skb)
                                 ixxat_pci_get_ts_tv(dev, timestamp,
                                                 &skb->tstamp);
-                        can_get_echo_skb(dev->netdev, frn - 1);
+                        can_get_echo_skb(dev->netdev, frn - 1, NULL);
                         dev->frn_read++;
                         result = 1;
 //                                                netdev_dbg(dev->netdev, "can_get_echo_skb %d", frn - 1);
                 } else if (frn > expectedfrn) {
                         netdev_dbg(dev->netdev, "frn > expectedfrn");
                         while (expectedfrn != frn) {
-//                                can_free_echo_skb(dev->netdev, expectedfrn - 1);
+//                                can_free_echo_skb(dev->netdev, expectedfrn - 1, 0);
                                 expectedfrn++;
                         }
                         // frn ist jetzt richtig behandle nachricht
@@ -370,14 +370,14 @@ int ixxat_pci_handle_frn(struct ixx_pci_priv *dev, u8 frn, u32 timestamp)
                         if (skb)
                                 ixxat_pci_get_ts_tv(dev, timestamp,
                                                 &skb->tstamp);
-                        can_get_echo_skb(dev->netdev, frn - 1);
+                        can_get_echo_skb(dev->netdev, frn - 1, NULL);
                         dev->frn_read = expectedfrn;
                         result = 1;
                 } else if (frn < expectedfrn && frn >= dev->frn_write) {
                         netdev_dbg(dev->netdev,
                                         "frn < expectedfrn && frn >= dev->frn_write");
                         while (dev->frn_read != frn) {
-//                                can_free_echo_skb(dev->netdev, frn - 1);
+//                                can_free_echo_skb(dev->netdev, frn - 1, 0);
                                 frn++;
                         }
                 } else if (frn < expectedfrn && frn < dev->frn_write) {
@@ -385,7 +385,7 @@ int ixxat_pci_handle_frn(struct ixx_pci_priv *dev, u8 frn, u32 timestamp)
                         netdev_dbg(dev->netdev,
                                         "frn < expectedfrn && frn < dev->frn_write");
                         while (expectedfrn != frn) {
-//                                can_free_echo_skb(dev->netdev, expectedfrn - 1);
+//                                can_free_echo_skb(dev->netdev, expectedfrn - 1, 0);
                                 expectedfrn++;
                                 if (expectedfrn > IXX_PCI_MAX_TX_TRANS)
                                         expectedfrn = 1;
@@ -395,7 +395,7 @@ int ixxat_pci_handle_frn(struct ixx_pci_priv *dev, u8 frn, u32 timestamp)
                         if (skb)
                                 ixxat_pci_get_ts_tv(dev, timestamp,
                                                 &skb->tstamp);
-                        can_get_echo_skb(dev->netdev, frn - 1);
+                        can_get_echo_skb(dev->netdev, frn - 1, NULL);
                         dev->frn_read = expectedfrn;
                         result = 1;
                 }

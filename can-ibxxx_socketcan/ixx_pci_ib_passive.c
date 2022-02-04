@@ -33,8 +33,6 @@
 #include "ifi.h"
 #include "ixx_pci_core.h"
 
-MODULE_SUPPORTED_DEVICE("IXXAT Automation GmbH CAN-IB1X0 and CAN-IB3X0 interfaces");
-
 /* IFI-CAN internal clock (Hz) */
 #define IFI_CAN_CLOCK_HZ     40000000
 
@@ -533,7 +531,7 @@ static int ixx_pas_ib_xxx_handle_status(struct ixx_pci_priv *priv,
                         tmp_read = 1;
 
                 if (tmp_read != priv->frn_write) {
-                        can_free_echo_skb(priv->netdev, priv->frn_read - 1);
+                        can_free_echo_skb(priv->netdev, priv->frn_read - 1, 0);
                         priv->frn_read = tmp_read;
                 }
                 spin_unlock_irqrestore(&priv->rcv_lock, spin_flags);
@@ -601,10 +599,10 @@ static int ixx_pas_ib_xxx_start_xmit(struct sk_buff *skb,
 #ifdef _REAL_LOOPBACK
                 spin_lock_irqsave(&priv->rcv_lock, spin_flags);
                 if (priv->can.echo_skb[priv->frn_write - 1]) {
-                        can_free_echo_skb(priv->netdev, priv->frn_write - 1);
+                        can_free_echo_skb(priv->netdev, priv->frn_write - 1, 0);
                 }
 
-                can_put_echo_skb(skb, priv->netdev, priv->frn_write - 1);
+                can_put_echo_skb(skb, priv->netdev, priv->frn_write - 1, 0);
                 can_dlc |= (priv->frn_write << IFI_R0_FRN_S) & IFI_R0_WR_FRN;
 
                 priv->frn_write++;
@@ -1121,7 +1119,7 @@ static int ixx_pas_ib_xxx_restart(struct ixx_pci_priv *priv)
         priv->frn_write = 0x2;
 
         for (i = 0; i < priv->can.echo_skb_max; ++i)
-                can_free_echo_skb(priv->netdev, i);
+                can_free_echo_skb(priv->netdev, i, 0);
 
         netif_wake_queue(priv->netdev);
 
