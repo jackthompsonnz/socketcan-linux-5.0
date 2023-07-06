@@ -27,11 +27,9 @@
 #include <linux/types.h>
 #include <linux/gfp.h>
 #include <asm-generic/errno.h>
-#include <stdarg.h>
+#include <linux/stdarg.h>
 
 #include "ixx_usb_core.h"
-
-MODULE_SUPPORTED_DEVICE("IXXAT Automation GmbH USB-to-CAN V2");
 
 /* use sja 1000 clock due to internal bittiming calculations */
 #define SJA1000_CRYSTAL_HZ	      8000000

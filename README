@@ -1,4 +1,4 @@
-Currently working on Kernel 5.11 
+Currently working on Kernel 5.19.0 
 
 Tested with Ixxat USB-to-CAN-v2 (Classic CAN) and Ixxat USB-to-CAN FD on 5.11 Ubuntu 20.04 HWE
 
