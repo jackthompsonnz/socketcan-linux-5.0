@@ -34,12 +34,10 @@
 
 #include <asm-generic/errno.h>
 
-#include <stdarg.h>
+#include <linux/stdarg.h>
 #include "ifi.h"
 #include "ififd.h"
 #include "ixx_pci_core.h"
-
-MODULE_SUPPORTED_DEVICE("IXXAT Automation GmbH CAN-IB2x0, CAN-IB4x0, CAN-IB6x0 and CAN-IB8x0 interfaces");
 
 #define IXX_FIRMWARE "ixx-can-ib-1.9.3.fw"
 
@@ -1140,7 +1138,7 @@ static int ixx_act_ib_xxx_create_status_frame(struct ixx_pci_priv *priv,
 
                         if (tmp_read != priv->frn_write) {
                                 can_free_echo_skb(priv->netdev,
-                                                priv->frn_read - 1);
+                                                priv->frn_read - 1, NULL);
                                 priv->frn_read = tmp_read;
                         }
                         spin_unlock_irqrestore(&priv->rcv_lock, spin_flags);
@@ -1467,10 +1465,10 @@ static int ixx_act_ib_xxx_start_xmit(struct sk_buff *skb,
 #ifdef _REAL_LOOPBACK
                 spin_lock_irqsave(&priv->rcv_lock, spin_flags);
                 if (priv->can.echo_skb[priv->frn_write - 1]) {
-                        can_free_echo_skb(priv->netdev, priv->frn_write - 1);
+                        can_free_echo_skb(priv->netdev, priv->frn_write - 1, NULL);
                 }
 
-                can_put_echo_skb(skb, priv->netdev, priv->frn_write - 1);
+                can_put_echo_skb(skb, priv->netdev, priv->frn_write - 1, 0);
                 can_dlc |= (priv->frn_write << IFI_R0_FRN_S) & IFI_R0_RD_FRN;
 
                 priv->frn_write++;
@@ -1599,10 +1597,10 @@ static int ixx_act_ib_xxx_start_xmit_fd(struct sk_buff *skb,
 #ifdef _REAL_LOOPBACK
                 spin_lock_irqsave(&priv->rcv_lock, spin_flags);
                 if (priv->can.echo_skb[priv->frn_write - 1]) {
-                        can_free_echo_skb(priv->netdev, priv->frn_write - 1);
+                        can_free_echo_skb(priv->netdev, priv->frn_write - 1, NULL);
                 }
 
-                can_put_echo_skb(skb, priv->netdev, priv->frn_write - 1);
+                can_put_echo_skb(skb, priv->netdev, priv->frn_write - 1, 0);
                 can_dlc |= (priv->frn_write << IFIFD_TXFIFO_FRN_S)
                                 & IFIFD_TXFIFO_FRN;
 
@@ -1732,7 +1730,7 @@ static int ixx_act_ib_xxx_restart_task(void* user_data)
                 priv->frn_write = 0x2;
 
                 for (i = 0; i < priv->can.echo_skb_max; ++i)
-                        can_free_echo_skb(priv->netdev, i);
+                        can_free_echo_skb(priv->netdev, i, NULL);
 
                 priv->restart_flag = 0;
                 priv->can.state = CAN_STATE_ERROR_ACTIVE;
@@ -1822,7 +1820,8 @@ static void ixx_act_ib_xxx_free(struct ixx_pci_priv *priv)
                 }
 
                 if (priv->intf->dmavadd)
-                        pci_free_consistent(priv->pdev, priv->intf->dmalen,
+                        dma_free_coherent(priv->pdev == NULL ? NULL : &priv->pdev->dev,
+                                        priv->intf->dmalen,
                                         priv->intf->dmavadd,
                                         priv->intf->dmaadd);
 
@@ -1871,7 +1870,7 @@ static int ixx_act_ib_xxx_probe(struct pci_dev *pdev,
         intf->addmemlen = CAN_IB2X0_ADDMEM_LEN;
         intf->dmalen = CAN_IB2X0_DMA_LEN;
 
-        intf->dmavadd = pci_alloc_consistent(pdev, intf->dmalen, &intf->dmaadd);
+        intf->dmavadd = dma_alloc_coherent(pdev == NULL ? NULL : &pdev->dev, intf->dmalen, &intf->dmaadd, GFP_ATOMIC);
         if (!intf->dmavadd) {
                 printk("pci_alloc_consistent failed\n");
                 err = -ENOBUFS;
@@ -1906,7 +1905,7 @@ static int ixx_act_ib_xxx_probe(struct pci_dev *pdev,
         release_irq: kfree(intf->addmemvadd);
         pci_disable_msi(pdev);
         intf->addmemvadd = NULL;
-        release_addmem: pci_free_consistent(pdev, intf->dmalen, intf->dmavadd,
+        release_addmem: dma_free_coherent(pdev == NULL ? NULL : &pdev->dev, intf->dmalen, intf->dmavadd,
                         intf->dmaadd);
         release_dma: iounmap(intf->reg1vadd);
         release_mem_region(intf->reg1add, intf->reg1len);
